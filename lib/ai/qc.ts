@@ -21,21 +21,21 @@ const SLANG_WORDS = [
   "stuff",
 ];
 
-const CTA_VERBS = [
-  "confirm",
-  "share",
-  "let us know",
-  "kindly",
-  "please",
-  "reply",
-  "respond",
-  "reach out",
-  "contact",
-  "advise",
-  "inform",
-  "reserve",
-  "arrange",
+const CTA_PATTERNS: RegExp[] = [
+  /\bconfirm\w*/i,
+  /\bshare\w*/i,
+  /\bkindly\b/i,
+  /\bplease\b/i,
+  /\breply\b/i,
+  /\brespond\w*/i,
+  /\breach out\b/i,
+  /\bcontact\b/i,
+  /\badvis(e|ing)\b/i,
+  /\binform\b/i,
+  /\blet us know\b/i,
 ];
+
+const SIGNATURE_START = /^(remarkably yours|sincerely|regards|best regards|warmly|warm regards)[,\s]/i;
 
 const LOYALTY_KEYWORDS = [
   "diamond",
@@ -60,8 +60,14 @@ export function runQCChecks({ body, recipientContext }: QCInput): QCReport {
     return re.test(body);
   });
 
-  const lastParagraph = body.split(/\n\s*\n/).filter(Boolean).slice(-1)[0] ?? body;
-  const cta_present = CTA_VERBS.some((v) => lastParagraph.toLowerCase().includes(v));
+  // Drop the signature block (e.g. "Remarkably yours, / Name / Title") before
+  // looking for a CTA — the real CTA typically lives in the last 1–2 body
+  // paragraphs above the sign-off, not in the signature itself.
+  const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const sigIdx = paragraphs.findIndex((p) => SIGNATURE_START.test(p));
+  const bodyParagraphs = sigIdx >= 0 ? paragraphs.slice(0, sigIdx) : paragraphs;
+  const tail = bodyParagraphs.slice(-2).join("\n\n");
+  const cta_present = CTA_PATTERNS.some((re) => re.test(tail));
 
   const hasLoyaltyContext = LOYALTY_KEYWORDS.some((k) => contextLower.includes(k));
   const bodyMentionsLoyalty = LOYALTY_KEYWORDS.some((k) => bodyLower.includes(k)) ||

@@ -3,7 +3,7 @@ import { anyCriticalQCFailed, runQCChecks } from "@/lib/ai/qc";
 
 const CLEAN_DRAFT = `Dear Ms. Chen,
 
-Thank you for choosing Chatrium Rawai Phuket for this meaningful stay. Your reservation for five nights, 24 to 28 April, is confirmed.
+Thank you for choosing Chatrium Rawai Phuket for this meaningful stay. As a valued Diamond member, your reservation for five nights, 24 to 28 April, is confirmed.
 
 To complement the occasion, we are pleased to extend a complimentary 60-minute couples spa experience and a private welcome amenity on arrival. We have also reserved a late check-out until 2:00 PM on the day of departure.
 
