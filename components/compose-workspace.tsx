@@ -5,12 +5,15 @@ import type {
   GenerateRequest,
   GenerateResponse,
   InputLanguage,
+  OutputLanguage,
   Property,
   Role,
   TaskType,
 } from "@/lib/schemas";
 import type { DraftEntry } from "@/lib/admin/drafts-store";
+import type { DraftTemplate } from "@/lib/templates";
 import { DraftPreview } from "./draft-preview";
+import { TemplatesModal } from "./templates-modal";
 
 // ── Task types are universal for hospitality ──────────────────────────────────
 const TASK_TYPES: { value: TaskType; label: string }[] = [
@@ -55,6 +58,7 @@ export function ComposeWorkspace() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [language, setLanguage]               = useState<InputLanguage>("th");
+  const [outputLanguage, setOutputLanguage]   = useState<OutputLanguage>("en");
   const [property, setProperty]               = useState<Property>("");
   const [role, setRole]                       = useState<Role>("");
   const [taskType, setTaskType]               = useState<TaskType>("guest_email");
@@ -68,6 +72,7 @@ export function ComposeWorkspace() {
   const [costWarning, setCostWarning] = useState<string | null>(null);
   const [history, setHistory]         = useState<DraftEntry[]>([]);
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const loadHistory = useCallback(() => {
     fetch("/api/drafts")
@@ -101,6 +106,19 @@ export function ComposeWorkspace() {
     loadHistory();
   }, [loadHistory]);
 
+  function onSelectTemplate(tmpl: DraftTemplate) {
+    setTaskType(tmpl.task_type);
+    setObjective(tmpl.objective);
+    setAdditionalNotes(tmpl.additional_notes);
+    // Clear recipient so user fills in the specific guest
+    setRecipientContext("");
+    // Clear output so staff doesn't confuse old draft with new
+    setResult(null);
+    setActiveHistoryId(null);
+    setError(null);
+    setCostWarning(null);
+  }
+
   function onHistoryClick(entry: DraftEntry) {
     // Restore form fields
     setProperty(entry.input.property as Property);
@@ -121,6 +139,7 @@ export function ComposeWorkspace() {
     if (config.properties[0]) setProperty(config.properties[0].value as Property);
     if (config.roles[0])      setRole(config.roles[0].value as Role);
     setLanguage("th");
+    setOutputLanguage("en");
     setTaskType("guest_email");
     setRecipientContext("");
     setObjective("");
@@ -148,6 +167,7 @@ export function ComposeWorkspace() {
         recipient_context: recipientContext,
         objective,
         input_language: language,
+        output_language: outputLanguage,
         additional_notes: additionalNotes,
       },
     };
@@ -180,6 +200,12 @@ export function ComposeWorkspace() {
   const initial = config.app_name.charAt(0).toUpperCase();
 
   return (
+    <>
+    <TemplatesModal
+      open={showTemplates}
+      onClose={() => setShowTemplates(false)}
+      onSelect={onSelectTemplate}
+    />
     <div className="grid grid-cols-[260px_1fr] min-h-screen">
       {/* ── Sidebar ── */}
       <aside
@@ -387,15 +413,27 @@ export function ComposeWorkspace() {
               Describe the objective. The brand voice is applied automatically.
             </p>
 
-            <div className="field mb-4">
-              <label>Input language</label>
-              <div className="toggle-group">
-                <button type="button" className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>
-                  ไทย
-                </button>
-                <button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
-                  English
-                </button>
+            <div className="grid grid-cols-2 gap-3.5 mb-4">
+              <div className="field">
+                <label>Input language</label>
+                <div className="toggle-group">
+                  <button type="button" className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>
+                    ไทย
+                  </button>
+                  <button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
+                    English
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>Email language</label>
+                <select value={outputLanguage} onChange={(e) => setOutputLanguage(e.target.value as OutputLanguage)}>
+                  <option value="en">🇬🇧 English</option>
+                  <option value="zh">🇨🇳 中文</option>
+                  <option value="ja">🇯🇵 日本語</option>
+                  <option value="ko">🇰🇷 한국어</option>
+                  <option value="th">🇹🇭 ภาษาไทย</option>
+                </select>
               </div>
             </div>
 
@@ -466,6 +504,26 @@ export function ComposeWorkspace() {
               <button type="submit" className="btn-gold" disabled={loading}>
                 {loading ? "Drafting…" : "Generate Email ›"}
               </button>
+              <button
+                type="button"
+                onClick={() => setShowTemplates(true)}
+                className="text-[13px] px-4 py-2 rounded border cursor-pointer transition-colors"
+                style={{
+                  background: "transparent",
+                  color: "var(--color-muted)",
+                  borderColor: "var(--color-line)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--color-gold)";
+                  e.currentTarget.style.borderColor = "rgba(197,165,114,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--color-muted)";
+                  e.currentTarget.style.borderColor = "var(--color-line)";
+                }}
+              >
+                📋 Templates
+              </button>
             </div>
 
             {costWarning && (
@@ -510,12 +568,13 @@ export function ComposeWorkspace() {
           <section className="overflow-y-auto p-7" style={{ background: "#141619" }}>
             <h2 className="serif text-[22px] tracking-wider m-0 mb-1">Draft Output</h2>
             <p className="text-xs mb-5" style={{ color: "var(--color-muted)" }}>
-              English output, brand-aligned and ready to review.
+              {{en:"English",zh:"Chinese (中文)",ja:"Japanese (日本語)",ko:"Korean (한국어)",th:"Thai (ภาษาไทย)"}[outputLanguage] ?? "English"} output, brand-aligned and ready to review.
             </p>
             <DraftPreview result={result} loading={loading} brandAuthor={config.brand_voice_author} />
           </section>
         </div>
       </main>
     </div>
+    </>
   );
 }

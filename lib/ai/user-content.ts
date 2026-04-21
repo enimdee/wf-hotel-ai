@@ -11,6 +11,14 @@ const ROLE_LABELS: Record<string, string> = {
   it_admin: "IT Admin",
 };
 
+const OUTPUT_LANG_LABELS: Record<string, string> = {
+  en: "English",
+  zh: "Chinese (Simplified)",
+  ja: "Japanese",
+  ko: "Korean",
+  th: "Thai",
+};
+
 const TASK_LABELS: Record<string, string> = {
   guest_email: "Guest email",
   corporate_partner: "Corporate / partner email",
@@ -39,6 +47,7 @@ export function buildUserContent(req: GenerateRequest): string {
   sections.push(`Writer role: ${ROLE_LABELS[input.role] ?? input.role}`);
   sections.push(`Task type: ${TASK_LABELS[input.task_type] ?? input.task_type}`);
   sections.push(`Input language: ${input.input_language === "th" ? "Thai" : "English"}`);
+  sections.push(`Output language — write the entire email in: ${OUTPUT_LANG_LABELS[input.output_language ?? "en"] ?? "English"}`);
 
   if (input.recipient_context) {
     sections.push(`Recipient context:\n<<<\n${input.recipient_context}\n>>>`);

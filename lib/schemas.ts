@@ -19,6 +19,9 @@ export type TaskType = z.infer<typeof taskTypeSchema>;
 export const inputLanguageSchema = z.enum(["th", "en"]);
 export type InputLanguage = z.infer<typeof inputLanguageSchema>;
 
+export const outputLanguageSchema = z.enum(["en", "zh", "ja", "ko", "th"]);
+export type OutputLanguage = z.infer<typeof outputLanguageSchema>;
+
 export const generateRequestSchema = z.object({
   input: z.object({
     property: propertySchema,
@@ -27,6 +30,7 @@ export const generateRequestSchema = z.object({
     recipient_context: z.string().max(500).optional().default(""),
     objective: z.string().min(10, "objective must be at least 10 characters").max(2000),
     input_language: inputLanguageSchema.default("en"),
+    output_language: outputLanguageSchema.default("en"),
     additional_notes: z.string().max(500).optional().default(""),
     template_id: z.number().int().nullable().optional(),
   }),
