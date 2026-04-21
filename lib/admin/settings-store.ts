@@ -28,6 +28,12 @@ export interface AppSettings {
   properties_text: string;   // one property name per line
   roles_text: string;        // one role name per line
 
+  // ── Cost ceiling ──────────────────────────────────────────────────────────
+  /** Hard monthly cost ceiling in THB. /api/generate returns 429 beyond this. */
+  monthly_cost_ceiling_thb: number;
+  /** Warning threshold: show alert banner when usage exceeds this % of ceiling. */
+  cost_alert_percent: number;
+
   updated_at: string;
 }
 
@@ -56,6 +62,9 @@ const DEFAULTS: AppSettings = {
 
   properties_text: DEFAULT_PROPERTIES,
   roles_text: DEFAULT_ROLES,
+
+  monthly_cost_ceiling_thb: Number(process.env.COST_CEILING_THB_PER_USER_MONTH ?? "50"),
+  cost_alert_percent: 80,
 
   updated_at: new Date().toISOString(),
 };

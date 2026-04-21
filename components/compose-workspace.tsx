@@ -47,9 +47,10 @@ export function ComposeWorkspace() {
   const [objective, setObjective]             = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
-  const [result, setResult]   = useState<GenerateResponse | null>(null);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState<string | null>(null);
+  const [result, setResult]           = useState<GenerateResponse | null>(null);
+  const [costWarning, setCostWarning] = useState<string | null>(null);
 
   // Load config once on mount
   useEffect(() => {
@@ -76,6 +77,7 @@ export function ComposeWorkspace() {
     setAdditionalNotes("");
     setResult(null);
     setError(null);
+    setCostWarning(null);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -106,6 +108,9 @@ export function ComposeWorkspace() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      // Surface cost warning header if present
+      const warn = res.headers.get("X-Cost-Warning");
+      setCostWarning(warn);
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`);
@@ -317,6 +322,19 @@ export function ComposeWorkspace() {
                 {loading ? "Drafting…" : "Generate Email ›"}
               </button>
             </div>
+
+            {costWarning && (
+              <div
+                className="mt-4 p-3 rounded text-[12px]"
+                style={{
+                  background: "rgba(197, 165, 114, 0.1)",
+                  borderLeft: "2px solid #c5a572",
+                  color: "#d4c4a0",
+                }}
+              >
+                ⚠ {costWarning}
+              </div>
+            )}
 
             {error && (
               <div

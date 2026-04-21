@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const schema = z.object({
-  app_name:           z.string().min(1, "App name is required").max(60),
-  app_tagline:        z.string().max(60).default("Communication Assistant"),
-  brand_voice_author: z.string().max(80).default("Brand Manager"),
-  properties_text:    z.string().min(1, "Enter at least one property"),
-  roles_text:         z.string().min(1, "Enter at least one role"),
+  app_name:                  z.string().min(1, "App name is required").max(60),
+  app_tagline:               z.string().max(60).default("Communication Assistant"),
+  brand_voice_author:        z.string().max(80).default("Brand Manager"),
+  properties_text:           z.string().min(1, "Enter at least one property"),
+  roles_text:                z.string().min(1, "Enter at least one role"),
+  monthly_cost_ceiling_thb:  z.coerce.number().min(1, "Minimum ฿1").max(100_000),
+  cost_alert_percent:        z.coerce.number().min(10).max(100).default(80),
 });
 
 export type AppSettingsState =
@@ -22,11 +24,13 @@ export async function saveAppSettings(
   formData: FormData,
 ): Promise<AppSettingsState> {
   const raw = {
-    app_name:           formData.get("app_name"),
-    app_tagline:        formData.get("app_tagline") || "Communication Assistant",
-    brand_voice_author: formData.get("brand_voice_author") || "Brand Manager",
-    properties_text:    formData.get("properties_text"),
-    roles_text:         formData.get("roles_text"),
+    app_name:                  formData.get("app_name"),
+    app_tagline:               formData.get("app_tagline") || "Communication Assistant",
+    brand_voice_author:        formData.get("brand_voice_author") || "Brand Manager",
+    properties_text:           formData.get("properties_text"),
+    roles_text:                formData.get("roles_text"),
+    monthly_cost_ceiling_thb:  formData.get("monthly_cost_ceiling_thb") || "50",
+    cost_alert_percent:        formData.get("cost_alert_percent") || "80",
   };
 
   const parsed = schema.safeParse(raw);

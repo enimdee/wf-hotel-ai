@@ -9,6 +9,8 @@ interface AppConfig {
   brand_voice_author: string;
   properties_text?: string;
   roles_text?: string;
+  monthly_cost_ceiling_thb?: number;
+  cost_alert_percent?: number;
 }
 
 const initial: AppSettingsState = { status: "idle" };
@@ -122,6 +124,52 @@ export default function AppSettingsPage() {
                 placeholder={"General Manager\nFront Office Manager\nSales & Marketing"}
               />
               <p className="text-xs text-gray-400">One role per line.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        {/* ── Cost Ceiling ── */}
+        <fieldset className="rounded-xl border border-gray-200 p-5 space-y-4">
+          <legend className="text-sm font-semibold text-gray-700 px-1">Cost Ceiling</legend>
+
+          <p className="text-xs text-gray-500">
+            Drafts are blocked when the monthly spend reaches the ceiling. Use this to protect
+            against unexpected API cost spikes.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">
+                Monthly Ceiling (฿ THB)
+              </label>
+              <input
+                name="monthly_cost_ceiling_thb"
+                type="number"
+                min={1}
+                max={100000}
+                step={1}
+                required
+                defaultValue={cfg.monthly_cost_ceiling_thb ?? 50}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+              <p className="text-xs text-gray-400">
+                Hard limit per month. New drafts are blocked at 100%.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">Alert Threshold (%)</label>
+              <input
+                name="cost_alert_percent"
+                type="number"
+                min={10}
+                max={100}
+                step={5}
+                defaultValue={cfg.cost_alert_percent ?? 80}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+              <p className="text-xs text-gray-400">
+                Show a warning banner in the admin dashboard above this %.
+              </p>
             </div>
           </div>
         </fieldset>

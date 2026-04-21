@@ -6,7 +6,12 @@ import { buildUserContent } from "@/lib/ai/user-content";
 import { generateDraft, parseDraft } from "@/lib/ai/client";
 import { runQCChecks, anyCriticalQCFailed, formatQCCorrective } from "@/lib/ai/qc";
 import { estimateCostThb } from "@/lib/ai/cost";
-import { env } from "@/lib/env";
+import { readSettings } from "@/lib/admin/settings-store";
+import {
+  appendUsage,
+  getMonthlyTotal,
+  secondsUntilNextMonth,
+} from "@/lib/admin/usage-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +43,20 @@ export async function POST(req: NextRequest) {
       error_code: "BAD_INPUT",
     });
   }
+
+  // ── Cost ceiling check (before spending any tokens) ───────────────────────
+  const settings = await readSettings();
+  const ceiling = settings.monthly_cost_ceiling_thb;
+  const { cost_thb: monthUsed, drafts: monthDrafts } = await getMonthlyTotal();
+
+  if (monthUsed >= ceiling) {
+    return errorJson(429, {
+      error: `Monthly cost ceiling reached (฿${monthUsed.toFixed(2)} used / ฿${ceiling.toFixed(2)} limit). Please contact your administrator to raise the limit or wait until next month.`,
+      error_code: "RATE_LIMITED",
+      retry_after_seconds: secondsUntilNextMonth(),
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   const { text: systemPrompt, version: promptVersion } = await loadActivePrompt();
   const userContent = buildUserContent(parsed.data);
@@ -75,7 +94,7 @@ export async function POST(req: NextRequest) {
             questions: parsedDraft.clarify,
             usage: {
               ...accumulatedUsage,
-              estimated_cost_thb: estimateCostThb(accumulatedUsage, env().AI_PROVIDER),
+              estimated_cost_thb: estimateCostThb(accumulatedUsage, settings.ai_provider),
               latency_ms: Date.now() - start,
             },
             model: result.model,
@@ -107,8 +126,11 @@ export async function POST(req: NextRequest) {
   }
 
   const latencyMs = Date.now() - start;
+  const draftId = `drf_${ulid()}`;
+  const costThb = estimateCostThb(accumulatedUsage, settings.ai_provider);
+
   const response: GenerateResponse = {
-    draft_id: `drf_${ulid()}`,
+    draft_id: draftId,
     subject: parsedDraft.subject,
     body: parsedDraft.body,
     qc,
@@ -116,14 +138,37 @@ export async function POST(req: NextRequest) {
       input_tokens: accumulatedUsage.input_tokens,
       input_tokens_cached: accumulatedUsage.cache_read_input_tokens,
       output_tokens: accumulatedUsage.output_tokens,
-      estimated_cost_thb: estimateCostThb(accumulatedUsage, env().AI_PROVIDER),
+      estimated_cost_thb: costThb,
       latency_ms: latencyMs,
     },
     model: result.model,
   };
 
-  // Phase 2+ will persist to `drafts` and append to `audit_log` here.
-  void promptVersion;
+  // ── Log usage (fire-and-forget — never fail the response) ─────────────────
+  void appendUsage({
+    draft_id: draftId,
+    provider: settings.ai_provider ?? "anthropic",
+    model: result.model,
+    input_tokens: accumulatedUsage.input_tokens,
+    cached_input_tokens: accumulatedUsage.cache_read_input_tokens,
+    output_tokens: accumulatedUsage.output_tokens,
+    cost_thb: costThb,
+    latency_ms: latencyMs,
+    task_type: parsed.data.input.task_type,
+    ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
+  }).catch(() => {/* silently ignore log failures */});
 
-  return NextResponse.json(response);
+  // Warn in response headers if approaching the ceiling
+  const alertThreshold = ceiling * (settings.cost_alert_percent / 100);
+  const newTotal = monthUsed + costThb;
+  const headers: Record<string, string> = {};
+  if (newTotal >= alertThreshold) {
+    headers["X-Cost-Warning"] = `Usage at ฿${newTotal.toFixed(2)} of ฿${ceiling.toFixed(2)} ceiling (${Math.round((newTotal / ceiling) * 100)}%)`;
+  }
+
+  // Phase 2+ will persist to `drafts` and `audit_log` tables here.
+  void promptVersion;
+  void monthDrafts;
+
+  return NextResponse.json(response, { headers });
 }
