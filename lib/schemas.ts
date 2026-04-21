@@ -61,6 +61,15 @@ export const generateResponseSchema = z.object({
 });
 export type GenerateResponse = z.infer<typeof generateResponseSchema>;
 
+export const refineRequestSchema = z.object({
+  source: z.object({
+    subject: z.string().min(1).max(300),
+    body:    z.string().min(1).max(5000),
+  }),
+  instruction: z.string().min(3).max(500),
+});
+export type RefineRequest = z.infer<typeof refineRequestSchema>;
+
 export const errorCodeSchema = z.enum([
   "AUTH_EXPIRED",
   "RATE_LIMITED",
