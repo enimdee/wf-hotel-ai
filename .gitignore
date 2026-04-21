@@ -49,3 +49,7 @@ infra/caddy_data/
 infra/caddy_config/
 infra/n8n_data/
 infra/mysql_data/
+
+# Wokeflow operator scripts — local state
+scripts/customers.log
+scripts/wf-config

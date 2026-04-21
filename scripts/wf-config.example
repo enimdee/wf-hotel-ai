@@ -1,0 +1,22 @@
+# ============================================================
+#  ~/.wf-config — Wokeflow operator config (DO NOT COMMIT)
+#  Copy to ~/.wf-config and fill in values.
+#  Sourced automatically by all scripts in scripts/
+# ============================================================
+
+# VPS connection
+VPS_IP="31.220.x.x"          # your Hostinger VPS IP
+VPS_USER="root"
+
+# Domain base (subdomains: rawai.wokeflow.net, grand-bkk.wokeflow.net, etc.)
+DOMAIN_BASE="wokeflow.net"
+
+# Hostinger API token (for DNS management)
+# Get from: https://hpanel.hostinger.com → Account → API
+HOSTINGER_API_TOKEN="Bearer_xxxxxxxx"
+
+# Shared SMTP for magic-link emails (can be overridden per customer)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="nimdee@gmail.com"
+SMTP_PASS="klyqmdhjvrgeushx"   # Gmail App Password (no spaces)
