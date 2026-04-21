@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type {
   GenerateRequest,
   GenerateResponse,
@@ -9,6 +9,7 @@ import type {
   Role,
   TaskType,
 } from "@/lib/schemas";
+import type { DraftEntry } from "@/lib/admin/drafts-store";
 import { DraftPreview } from "./draft-preview";
 
 // ── Task types are universal for hospitality ──────────────────────────────────
@@ -36,6 +37,19 @@ const FALLBACK_CONFIG: AppConfig = {
   roles:      [{ value: "general_manager", label: "General Manager" }],
 };
 
+function formatAge(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1)   return "just now";
+  if (mins < 60)  return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7)   return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
 export function ComposeWorkspace() {
   const [config, setConfig] = useState<AppConfig>(FALLBACK_CONFIG);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -52,6 +66,15 @@ export function ComposeWorkspace() {
   const [error, setError]             = useState<string | null>(null);
   const [result, setResult]           = useState<GenerateResponse | null>(null);
   const [costWarning, setCostWarning] = useState<string | null>(null);
+  const [history, setHistory]         = useState<DraftEntry[]>([]);
+  const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
+
+  const loadHistory = useCallback(() => {
+    fetch("/api/drafts")
+      .then((r) => r.json())
+      .then((d: DraftEntry[]) => setHistory(d))
+      .catch(() => {});
+  }, []);
 
   // Load config once on mount
   useEffect(() => {
@@ -74,7 +97,25 @@ export function ComposeWorkspace() {
         if (d.authenticated) setUserEmail(d.email ?? null);
       })
       .catch(() => {});
-  }, []);
+
+    loadHistory();
+  }, [loadHistory]);
+
+  function onHistoryClick(entry: DraftEntry) {
+    // Restore form fields
+    setProperty(entry.input.property as Property);
+    setRole(entry.input.role as Role);
+    setTaskType(entry.input.task_type as TaskType);
+    setRecipientContext(entry.input.recipient_context);
+    setObjective(entry.input.objective);
+    setAdditionalNotes(entry.input.additional_notes);
+    setLanguage(entry.input.input_language as InputLanguage);
+    // Restore output
+    setResult(entry.result);
+    setActiveHistoryId(entry.draft_id);
+    setError(null);
+    setCostWarning(null);
+  }
 
   function resetForm() {
     if (config.properties[0]) setProperty(config.properties[0].value as Property);
@@ -126,6 +167,9 @@ export function ComposeWorkspace() {
       }
       const data = (await res.json()) as GenerateResponse;
       setResult(data);
+      setActiveHistoryId(data.draft_id);
+      // Refresh history sidebar after a short delay (server saves async)
+      setTimeout(loadHistory, 800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -170,6 +214,58 @@ export function ComposeWorkspace() {
         <button type="button" className="btn-gold text-xs py-2.5" onClick={resetForm}>
           + New Draft
         </button>
+
+        {/* ── Draft History ──────────────────────────────────────────────── */}
+        {history.length > 0 && (
+          <div>
+            <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "var(--color-muted)" }}>
+              Recent Drafts
+            </div>
+            <div className="space-y-1">
+              {history.map((entry) => {
+                const isActive = entry.draft_id === activeHistoryId;
+                const taskLabel = TASK_TYPES.find((t) => t.value === entry.task_type)?.label ?? entry.task_type;
+                const age = formatAge(entry.created_at);
+                return (
+                  <button
+                    key={entry.draft_id}
+                    type="button"
+                    onClick={() => onHistoryClick(entry)}
+                    className="w-full text-left px-2.5 py-2 rounded-lg transition-colors"
+                    style={{
+                      background: isActive ? "rgba(197,165,114,0.12)" : "transparent",
+                      border: `1px solid ${isActive ? "rgba(197,165,114,0.3)" : "transparent"}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <div
+                      className="text-[12px] leading-tight truncate"
+                      style={{ color: isActive ? "#c5a572" : "#d4d6d9" }}
+                    >
+                      {entry.subject}
+                    </div>
+                    <div className="flex gap-1.5 items-center mt-1 flex-wrap">
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded"
+                        style={{ background: "rgba(197,165,114,0.1)", color: "#8a7a60" }}
+                      >
+                        {taskLabel}
+                      </span>
+                      <span className="text-[10px]" style={{ color: "#5a5e66" }}>
+                        {age}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="mt-1 space-y-2">
           <div className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "var(--color-muted)" }}>

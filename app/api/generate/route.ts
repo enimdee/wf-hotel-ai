@@ -12,6 +12,7 @@ import {
   getMonthlyTotal,
   secondsUntilNextMonth,
 } from "@/lib/admin/usage-store";
+import { appendDraft } from "@/lib/admin/drafts-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -157,6 +158,24 @@ export async function POST(req: NextRequest) {
     task_type: parsed.data.input.task_type,
     ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
   }).catch(() => {/* silently ignore log failures */});
+
+  // ── Save to draft history (fire-and-forget) ───────────────────────────────
+  void appendDraft({
+    draft_id: draftId,
+    subject: parsedDraft.subject,
+    task_type: parsed.data.input.task_type,
+    recipient_context: parsed.data.input.recipient_context,
+    input: {
+      property:          parsed.data.input.property,
+      role:              parsed.data.input.role,
+      task_type:         parsed.data.input.task_type,
+      recipient_context: parsed.data.input.recipient_context,
+      objective:         parsed.data.input.objective,
+      input_language:    parsed.data.input.input_language,
+      additional_notes:  parsed.data.input.additional_notes,
+    },
+    result: response,
+  }).catch(() => {});
 
   // Warn in response headers if approaching the ceiling
   const alertThreshold = ceiling * (settings.cost_alert_percent / 100);
