@@ -4,8 +4,20 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
 
-  ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required"),
+  // AI provider — swap without code changes
+  AI_PROVIDER: z.enum(["anthropic", "openai", "google"]).default("anthropic"),
+
+  // Anthropic (default)
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-6"),
+
+  // OpenAI
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().default("gpt-4o"),
+
+  // Google Gemini
+  GOOGLE_API_KEY: z.string().min(1).optional(),
+  GOOGLE_MODEL: z.string().default("gemini-2.0-flash"),
 
   DATABASE_URL: z.string().url().optional(),
 

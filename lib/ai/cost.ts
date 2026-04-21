@@ -1,12 +1,24 @@
 /**
- * Anthropic Claude Sonnet 4.6 pricing, converted to THB for audit_log.
- * Update these three constants when pricing or FX moves materially.
+ * Per-provider token pricing (USD per 1 M tokens) → converted to THB.
+ * Update when pricing or FX moves materially.
  */
-const USD_PER_M_INPUT_TOKENS = 3.0;
-const USD_PER_M_INPUT_TOKENS_CACHED_READ = 0.3;
-const USD_PER_M_INPUT_TOKENS_CACHE_WRITE = 3.75;
-const USD_PER_M_OUTPUT_TOKENS = 15.0;
 const THB_PER_USD = 36;
+
+interface ProviderRates {
+  input: number;
+  output: number;
+  cachedRead: number;
+  cacheWrite: number;
+}
+
+const PRICING: Record<string, ProviderRates> = {
+  // https://www.anthropic.com/pricing
+  anthropic: { input: 3.0, output: 15.0, cachedRead: 0.30, cacheWrite: 3.75 },
+  // https://openai.com/pricing  (gpt-4o)
+  openai:    { input: 2.5, output: 10.0, cachedRead: 1.25, cacheWrite: 0 },
+  // https://ai.google.dev/pricing  (gemini-2.0-flash)
+  google:    { input: 0.075, output: 0.30, cachedRead: 0, cacheWrite: 0 },
+};
 
 export interface TokenUsage {
   input_tokens: number;
@@ -15,17 +27,12 @@ export interface TokenUsage {
   output_tokens: number;
 }
 
-export function estimateCostThb(u: TokenUsage): number {
-  const freshInput = u.input_tokens;
-  const cacheWrite = u.cache_creation_input_tokens ?? 0;
-  const cacheRead = u.cache_read_input_tokens ?? 0;
-  const output = u.output_tokens;
-
+export function estimateCostThb(u: TokenUsage, provider = "anthropic"): number {
+  const rates = PRICING[provider] ?? PRICING.anthropic!;
   const usd =
-    (freshInput * USD_PER_M_INPUT_TOKENS) / 1_000_000 +
-    (cacheWrite * USD_PER_M_INPUT_TOKENS_CACHE_WRITE) / 1_000_000 +
-    (cacheRead * USD_PER_M_INPUT_TOKENS_CACHED_READ) / 1_000_000 +
-    (output * USD_PER_M_OUTPUT_TOKENS) / 1_000_000;
-
+    (u.input_tokens                     * rates.input)      / 1_000_000 +
+    ((u.cache_creation_input_tokens ?? 0) * rates.cacheWrite) / 1_000_000 +
+    ((u.cache_read_input_tokens ?? 0)     * rates.cachedRead) / 1_000_000 +
+    (u.output_tokens                    * rates.output)     / 1_000_000;
   return Number((usd * THB_PER_USD).toFixed(4));
 }

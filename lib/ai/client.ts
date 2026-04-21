@@ -1,16 +1,18 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { env } from "@/lib/env";
 
-let client: Anthropic | null = null;
-
-export function getAnthropic(): Anthropic {
-  if (client) return client;
-  client = new Anthropic({
-    apiKey: env().ANTHROPIC_API_KEY,
-    maxRetries: 1,
-  });
-  return client;
+// ─── Anthropic singleton (reused across requests for prompt-cache warm-up) ───
+let _anthropic: Anthropic | null = null;
+function getAnthropic(): Anthropic {
+  if (_anthropic) return _anthropic;
+  _anthropic = new Anthropic({ apiKey: env().ANTHROPIC_API_KEY ?? "", maxRetries: 1 });
+  return _anthropic;
 }
+
+// ─── Shared types ─────────────────────────────────────────────────────────────
 
 export interface GenerateDraftArgs {
   systemPrompt: string;
@@ -30,37 +32,22 @@ export interface GenerateDraftResult {
   stopReason: string | null;
 }
 
-/**
- * Calls Claude with the brand-voice system prompt cached.
- * The system prompt is stable across calls — cache_control ephemeral
- * gives ~90% input-cost reduction within a 5-minute window.
- */
-export async function generateDraft(args: GenerateDraftArgs): Promise<GenerateDraftResult> {
-  const anthropic = getAnthropic();
-  const model = env().ANTHROPIC_MODEL;
+// ─── Provider implementations ─────────────────────────────────────────────────
 
-  const response = await anthropic.messages.create({
-    model,
+/** Anthropic — keeps prompt-cache (ephemeral) for ~90 % input-cost saving. */
+async function generateWithAnthropic(args: GenerateDraftArgs): Promise<GenerateDraftResult> {
+  const e = env();
+  if (!e.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic");
+
+  const response = await getAnthropic().messages.create({
+    model: e.ANTHROPIC_MODEL,
     max_tokens: args.maxTokens ?? 700,
-    system: [
-      {
-        type: "text",
-        text: args.systemPrompt,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    messages: [
-      {
-        role: "user",
-        content: args.userContent,
-      },
-    ],
+    system: [{ type: "text", text: args.systemPrompt, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: args.userContent }],
   });
 
   const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Anthropic response contained no text block");
-  }
+  if (!textBlock || textBlock.type !== "text") throw new Error("No text block in Anthropic response");
 
   return {
     text: textBlock.text,
@@ -75,24 +62,85 @@ export async function generateDraft(args: GenerateDraftArgs): Promise<GenerateDr
   };
 }
 
+/** OpenAI — via Vercel AI SDK. */
+async function generateWithOpenAI(args: GenerateDraftArgs): Promise<GenerateDraftResult> {
+  const e = env();
+  if (!e.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is required when AI_PROVIDER=openai");
+
+  const client = createOpenAI({ apiKey: e.OPENAI_API_KEY });
+  const result = await generateText({
+    model: client(e.OPENAI_MODEL),
+    system: args.systemPrompt,
+    prompt: args.userContent,
+    maxOutputTokens: args.maxTokens ?? 700,
+  });
+
+  return {
+    text: result.text,
+    usage: {
+      input_tokens: result.usage.inputTokens ?? 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      output_tokens: result.usage.outputTokens ?? 0,
+    },
+    model: result.response.modelId,
+    stopReason: result.finishReason ?? null,
+  };
+}
+
+/** Google Gemini — via Vercel AI SDK. */
+async function generateWithGoogle(args: GenerateDraftArgs): Promise<GenerateDraftResult> {
+  const e = env();
+  if (!e.GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is required when AI_PROVIDER=google");
+
+  const client = createGoogleGenerativeAI({ apiKey: e.GOOGLE_API_KEY });
+  const result = await generateText({
+    model: client(e.GOOGLE_MODEL),
+    system: args.systemPrompt,
+    prompt: args.userContent,
+    maxOutputTokens: args.maxTokens ?? 700,
+  });
+
+  return {
+    text: result.text,
+    usage: {
+      input_tokens: result.usage.inputTokens ?? 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      output_tokens: result.usage.outputTokens ?? 0,
+    },
+    model: result.response.modelId,
+    stopReason: result.finishReason ?? null,
+  };
+}
+
+// ─── Public entry point ───────────────────────────────────────────────────────
+
+/** Route to the active provider set by AI_PROVIDER env var. */
+export async function generateDraft(args: GenerateDraftArgs): Promise<GenerateDraftResult> {
+  switch (env().AI_PROVIDER) {
+    case "openai":  return generateWithOpenAI(args);
+    case "google":  return generateWithGoogle(args);
+    default:        return generateWithAnthropic(args);
+  }
+}
+
+// ─── Response parser (provider-agnostic) ─────────────────────────────────────
+
 /**
- * Parse the model's reply. Expected format:
- *   Subject: ...
+ * Parse the model reply. Expected format:
+ *   Subject: <one-liner>
  *   <blank line>
  *   <body>
  *
- * If the model returns `CLARIFY: ...` as the first line, the caller should
- * surface the questions to the user instead of treating it as a final draft.
+ * If the first line is `CLARIFY: ...` the caller surfaces questions instead.
  */
 export function parseDraft(raw: string): { subject: string; body: string } | { clarify: string } {
   const trimmed = raw.trim();
   if (trimmed.toUpperCase().startsWith("CLARIFY:")) {
     return { clarify: trimmed.slice("CLARIFY:".length).trim() };
   }
-
   const match = trimmed.match(/^\s*Subject:\s*(.+?)\s*\n([\s\S]*)$/i);
-  if (!match) {
-    return { subject: "(no subject)", body: trimmed };
-  }
+  if (!match) return { subject: "(no subject)", body: trimmed };
   return { subject: match[1]!.trim(), body: match[2]!.trim() };
 }

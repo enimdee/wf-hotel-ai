@@ -6,6 +6,7 @@ import { buildUserContent } from "@/lib/ai/user-content";
 import { generateDraft, parseDraft } from "@/lib/ai/client";
 import { runQCChecks, anyCriticalQCFailed, formatQCCorrective } from "@/lib/ai/qc";
 import { estimateCostThb } from "@/lib/ai/cost";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
             questions: parsedDraft.clarify,
             usage: {
               ...accumulatedUsage,
-              estimated_cost_thb: estimateCostThb(accumulatedUsage),
+              estimated_cost_thb: estimateCostThb(accumulatedUsage, env().AI_PROVIDER),
               latency_ms: Date.now() - start,
             },
             model: result.model,
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
       input_tokens: accumulatedUsage.input_tokens,
       input_tokens_cached: accumulatedUsage.cache_read_input_tokens,
       output_tokens: accumulatedUsage.output_tokens,
-      estimated_cost_thb: estimateCostThb(accumulatedUsage),
+      estimated_cost_thb: estimateCostThb(accumulatedUsage, env().AI_PROVIDER),
       latency_ms: latencyMs,
     },
     model: result.model,
