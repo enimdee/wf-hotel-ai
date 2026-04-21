@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chatrium AI Communication Assistant — Mockup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#0f1113;
+    --panel:#17191c;
+    --panel-2:#1d2024;
+    --line:#2a2d33;
+    --gold:#c5a572;
+    --gold-soft:#d8bd8e;
+    --text:#e9e8e3;
+    --muted:#8a8e96;
+    --success:#7fb383;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .serif{font-family:"Cormorant Garamond","Playfair Display",Georgia,serif;letter-spacing:.02em}
+
+  /* Layout */
+  .app{display:grid;grid-template-columns:260px 1fr;height:100vh;}
+  /* Sidebar */
+  .sidebar{
+    background:#0b0d0f;
+    border-right:1px solid var(--line);
+    padding:22px 18px;
+    display:flex;flex-direction:column;gap:18px;
+    overflow-y:auto;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .brand-mark{
+    width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),#8a6d3f);
+    display:flex;align-items:center;justify-content:center;
+    color:#17191c;font-weight:700;font-family:Georgia,serif;
+  }
+  .brand-name{font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;letter-spacing:.14em;text-transform:uppercase}
+  .brand-sub{color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+
+  .side-section-title{
+    color:var(--muted);font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin:6px 2px 4px;
+  }
+  .btn-new{
+    background:linear-gradient(135deg,var(--gold),#a8884e);color:#17191c;border:none;
+    padding:10px 12px;border-radius:6px;font-weight:600;letter-spacing:.04em;cursor:pointer;
+    display:flex;align-items:center;gap:8px;
+  }
+  .btn-new:hover{filter:brightness(1.08)}
+
+  .history-list{display:flex;flex-direction:column;gap:2px}
+  .history-item{
+    padding:8px 10px;border-radius:6px;color:#c7c9cc;cursor:pointer;
+    font-size:13px;display:flex;flex-direction:column;gap:2px;
+  }
+  .history-item:hover{background:var(--panel)}
+  .history-item.active{background:var(--panel-2);border-left:2px solid var(--gold)}
+  .history-meta{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+  .user-card{
+    margin-top:auto;padding:12px;background:var(--panel);border-radius:8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .avatar{
+    width:34px;height:34px;border-radius:50%;background:#2a2d33;
+    display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:600;
+  }
+  .user-meta{font-size:12px}
+  .user-role{color:var(--muted);font-size:11px}
+
+  /* Main */
+  main{display:flex;flex-direction:column;overflow:hidden}
+  .topbar{
+    padding:14px 28px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;background:#0d0f11;
+  }
+  .topbar h1{margin:0;font-size:16px;font-weight:500;letter-spacing:.04em}
+  .topbar .pillars{color:var(--muted);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+  .pill-badges{display:flex;gap:6px;flex-wrap:wrap}
+  .pill-badge{
+    border:1px solid var(--line);background:var(--panel);padding:4px 9px;border-radius:999px;
+    font-size:11px;color:#c7b48a;letter-spacing:.08em;
+  }
+
+  .workarea{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;overflow:hidden}
+  .col{overflow-y:auto;padding:26px 28px}
+  .col.left{border-right:1px solid var(--line);background:#111316}
+  .col.right{background:#141619}
+
+  .col-title{
+    font-family:"Cormorant Garamond",Georgia,serif;font-size:22px;letter-spacing:.04em;margin:0 0 4px;
+  }
+  .col-hint{color:var(--muted);font-size:12px;margin-bottom:20px}
+
+  /* Form */
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+  select,input[type="text"],textarea{
+    width:100%;background:var(--panel);color:var(--text);
+    border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-family:inherit;font-size:13px;
+    outline:none;transition:border-color .15s;
+  }
+  select:focus,input:focus,textarea:focus{border-color:var(--gold)}
+  textarea{resize:vertical;min-height:110px;line-height:1.55}
+
+  .toggle-group{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);padding:3px;border-radius:8px}
+  .toggle-group button{
+    flex:1;background:transparent;color:var(--muted);border:none;padding:8px 10px;border-radius:5px;
+    cursor:pointer;font-size:12px;letter-spacing:.04em;
+  }
+  .toggle-group button.active{background:var(--gold);color:#17191c;font-weight:600}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line);background:var(--panel);padding:6px 12px;border-radius:999px;
+    cursor:pointer;font-size:12px;color:#c7c9cc;
+  }
+  .chip.active{border-color:var(--gold);color:var(--gold);background:rgba(197,165,114,.08)}
+
+  .actions-row{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--gold),#a8884e);color:#17191c;border:none;
+    padding:12px 22px;border-radius:6px;font-weight:600;letter-spacing:.06em;cursor:pointer;
+    font-size:13px;text-transform:uppercase;
+  }
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-ghost{
+    background:transparent;color:var(--text);border:1px solid var(--line);padding:11px 16px;
+    border-radius:6px;font-size:12px;letter-spacing:.04em;cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+  .hint-note{
+    margin-top:18px;padding:12px 14px;background:rgba(197,165,114,.06);
+    border-left:2px solid var(--gold);font-size:12px;color:#d8d6cf;border-radius:0 4px 4px 0;
+  }
+
+  /* Output */
+  .output-card{
+    background:#0d0f11;border:1px solid var(--line);border-radius:8px;padding:0;overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.28);
+  }
+  .output-head{
+    padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);background:var(--panel);
+  }
+  .output-head .tag{font-size:11px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase}
+  .output-tools{display:flex;gap:6px}
+  .icon-btn{
+    background:transparent;border:1px solid var(--line);color:var(--muted);width:30px;height:30px;
+    border-radius:5px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;
+  }
+  .icon-btn:hover{color:var(--gold);border-color:var(--gold)}
+  .output-body{padding:22px 24px;font-size:14px;line-height:1.75;color:#e9e8e3;font-family:"Georgia",serif}
+  .output-body p{margin:0 0 14px}
+  .output-body .sig{color:var(--muted);font-family:inherit;font-style:italic;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+
+  .qc-row{
+    display:flex;gap:14px;margin-top:16px;padding:10px 14px;background:var(--panel);border-radius:6px;
+    font-size:12px;color:var(--muted);
+  }
+  .qc-item{display:flex;align-items:center;gap:6px}
+  .qc-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block}
+
+  /* Footer bar */
+  .usage{
+    padding:10px 28px;border-top:1px solid var(--line);background:#0b0d0f;color:var(--muted);
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:flex;gap:20px;justify-content:space-between;
+  }
+  .usage b{color:var(--text);font-weight:500}
+
+  /* Small screens */
+  @media (max-width: 1100px){
+    .workarea{grid-template-columns:1fr}
+    .col.left{border-right:0;border-bottom:1px solid var(--line)}
+  }
+  @media (max-width: 720px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#2a2d33;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#3a3d44}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <div class="brand-name">Chatrium</div>
+        <div class="brand-sub">AI Assistant</div>
+      </div>
+    </div>
+
+    <button class="btn-new">＋ New Draft</button>
+
+    <div>
+      <div class="side-section-title">Templates</div>
+      <div class="history-list">
+        <div class="history-item active">
+          <span>Guest Follow-up Email</span>
+          <span class="history-meta">Email · Rawai Phuket</span>
+        </div>
+        <div class="history-item">
+          <span>Corporate Rate Proposal</span>
+          <span class="history-meta">Email · Grand Bangkok</span>
+        </div>
+        <div class="history-item">
+          <span>Loyalty Reinstatement</span>
+          <span class="history-meta">Email · All Properties</span>
+        </div>
+        <div class="history-item">
+          <span>Internal Memo to F&B</span>
+          <span class="history-meta">Memo · Internal</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="side-section-title">Recent</div>
+      <div class="history-list">
+        <div class="history-item">
+          <span>Reply to Ms. Chen — honeymoon package</span>
+          <span class="history-meta">Today · 10:42</span>
+        </div>
+        <div class="history-item">
+          <span>Confirmation — Somerset group booking</span>
+          <span class="history-meta">Today · 09:15</span>
+        </div>
+        <div class="history-item">
+          <span>Apology — late check-in, Suite 1204</span>
+          <span class="history-meta">Yesterday</span>
+        </div>
+        <div class="history-item">
+          <span>Wellness upsell — returning guest</span>
+          <span class="history-meta">Yesterday</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-card">
+      <div class="avatar">RA</div>
+      <div>
+        <div class="user-meta">Richard A. Mehr</div>
+        <div class="user-role">GM · Rawai Phuket</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="topbar">
+      <div>
+        <h1 class="serif">Professional Communication Drafting</h1>
+        <div class="pillars">Brand Voice · Rene Balmer · v2.1 · Auto-applied</div>
+      </div>
+      <div class="pill-badges">
+        <span class="pill-badge">Emotional</span>
+        <span class="pill-badge">Connection</span>
+        <span class="pill-badge">Example</span>
+        <span class="pill-badge">Remarkable</span>
+      </div>
+    </div>
+
+    <div class="workarea">
+
+      <!-- LEFT: INPUT -->
+      <section class="col left">
+        <h2 class="col-title">Compose</h2>
+        <p class="col-hint">Describe the objective. The Chatrium brand voice is applied automatically.</p>
+
+        <div class="field">
+          <label>Input language</label>
+          <div class="toggle-group">
+            <button class="active">ไทย</button>
+            <button>English</button>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label>Property</label>
+            <select>
+              <option>Chatrium Rawai Phuket</option>
+              <option>Chatrium Grand Bangkok</option>
+              <option>Chatrium Riverside Bangkok</option>
+              <option>Maitria Residence Rama 9</option>
+              <option>Maitria Hotel Sukhumvit 18</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Your role</label>
+            <select>
+              <option>General Manager</option>
+              <option>Front Office Manager</option>
+              <option>Sales &amp; Marketing</option>
+              <option>Reservations</option>
+              <option>Guest Relations</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Task type</label>
+          <div class="chips">
+            <span class="chip active">Guest email</span>
+            <span class="chip">Corporate / partner</span>
+            <span class="chip">Internal memo</span>
+            <span class="chip">Apology &amp; recovery</span>
+            <span class="chip">Upsell / offer</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Recipient context</label>
+          <input type="text" placeholder="e.g. Ms. Chen — Diamond member — honeymoon stay Apr 24–28">
+        </div>
+
+        <div class="field">
+          <label>Your objective (Thai or English)</label>
+          <textarea>ลูกค้าคุณ Chen จอง honeymoon package มา 5 คืน ต้องการยืนยันการจอง แจ้ง late check-out ได้ถึง 2 PM, offer complimentary couples spa 60 นาที, และเชิญทาน dinner ที่ Etcha พร้อม private welcome amenity</textarea>
+        </div>
+
+        <div class="field">
+          <label>Additional notes (optional)</label>
+          <input type="text" placeholder="e.g. mention MICHELIN 2026 recognition for Etcha, avoid dates in June">
+        </div>
+
+        <div class="actions-row">
+          <button class="btn-primary">Generate Email ›</button>
+          <button class="btn-ghost">Ask 10 clarifying questions first</button>
+          <button class="btn-ghost">Save as template</button>
+        </div>
+
+        <div class="hint-note">
+          <b>Brand voice enforced automatically:</b> No em-dashes · No slang · Warm executive clarity · Guest-first · No excessive pleasantries · Concise and elegant sentence construction.
+        </div>
+      </section>
+
+      <!-- RIGHT: OUTPUT -->
+      <section class="col right">
+        <h2 class="col-title">Draft Output</h2>
+        <p class="col-hint">English output, brand-aligned and ready to review.</p>
+
+        <div class="output-card">
+          <div class="output-head">
+            <span class="tag">Generated · Business English</span>
+            <div class="output-tools">
+              <button class="icon-btn" title="Copy">⎘</button>
+              <button class="icon-btn" title="Regenerate">↻</button>
+              <button class="icon-btn" title="Send to Outlook">✈</button>
+              <button class="icon-btn" title="More">⋯</button>
+            </div>
+          </div>
+
+          <div class="output-body">
+            <p><b>Subject:</b> Your honeymoon stay at Chatrium Rawai Phuket, 24–28 April</p>
+
+            <p>Dear Ms. Chen,</p>
+
+            <p>Thank you for choosing Chatrium Rawai Phuket for this meaningful stay. Your reservation for five nights, 24 to 28 April, is confirmed.</p>
+
+            <p>To complement the occasion, we are pleased to extend the following:</p>
+
+            <p>
+              1. Late check-out until 2:00 PM on the day of departure.<br>
+              2. A complimentary 60-minute couples spa experience, to be scheduled at your convenience.<br>
+              3. A private welcome amenity prepared in-suite on arrival.
+            </p>
+
+            <p>We would also be delighted to reserve a table for you at Etcha, our signature dining venue recognised in the MICHELIN Guide 2026. Kindly share your preferred evening, and we will arrange the details.</p>
+
+            <p>Should you have any further requests, Khun Natcha, your dedicated Guest Relations host, will reach out prior to arrival.</p>
+
+            <p>We look forward to welcoming you.</p>
+
+            <div class="sig">
+              Remarkably yours,<br>
+              Richard Adrian Mehr<br>
+              General Manager, Chatrium Rawai Phuket
+            </div>
+          </div>
+        </div>
+
+        <div class="qc-row">
+          <span class="qc-item"><span class="qc-dot"></span> Brand voice: passed</span>
+          <span class="qc-item"><span class="qc-dot"></span> No em-dashes</span>
+          <span class="qc-item"><span class="qc-dot"></span> CTA included</span>
+          <span class="qc-item"><span class="qc-dot"></span> Loyalty recognised</span>
+          <span class="qc-item"><span class="qc-dot"></span> Upsell framed as benefit</span>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn-ghost">Make shorter</button>
+          <button class="btn-ghost">More formal</button>
+          <button class="btn-ghost">Add loyalty upgrade offer</button>
+          <button class="btn-ghost">Translate to Thai</button>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="usage">
+      <span>Tokens this draft: <b>1,240</b> · Cost: <b>฿0.42</b></span>
+      <span>Signed in as <b>richard.meh@chatrium.com</b> · SSO via Microsoft 365</span>
+      <span>Model: <b>Claude Sonnet 4.6</b> · Data retention: off</span>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

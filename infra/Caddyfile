@@ -1,0 +1,19 @@
+# Phase 1 uses a placeholder subdomain. Swap `ai.chatrium.com` here once D-1
+# (subdomain) is decided. Caddy auto-issues TLS via Let's Encrypt.
+
+ai.chatrium.com {
+  encode zstd gzip
+
+  # Next.js app (static assets + API routes)
+  reverse_proxy web:3000
+
+  log {
+    output stdout
+    format json
+  }
+}
+
+# Local dev fallback — browse http://localhost for a non-TLS smoke test
+:80 {
+  reverse_proxy web:3000
+}
