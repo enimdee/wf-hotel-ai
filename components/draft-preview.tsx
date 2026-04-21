@@ -13,6 +13,7 @@ export function DraftPreview({
   brandAuthor?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [outlookStatus, setOutlookStatus] = useState<"idle" | "opened" | "copied">("idle");
 
   if (loading) {
     return (
@@ -72,6 +73,26 @@ export function DraftPreview({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const openInOutlook = async () => {
+    const subject = encodeURIComponent(result.subject);
+    const body    = encodeURIComponent(result.body);
+    const url     = `mailto:?subject=${subject}&body=${body}`;
+
+    if (url.length <= 1900) {
+      // Happy path — open the user's default mail client directly
+      const a = document.createElement("a");
+      a.href = url;
+      a.click();
+      setOutlookStatus("opened");
+      setTimeout(() => setOutlookStatus("idle"), 3000);
+    } else {
+      // Body too long for mailto: — copy to clipboard instead
+      await navigator.clipboard.writeText(`Subject: ${result.subject}\n\n${result.body}`);
+      setOutlookStatus("copied");
+      setTimeout(() => setOutlookStatus("idle"), 4000);
+    }
+  };
+
   const qcChecks: { label: string; ok: boolean }[] = [
     { label: "No em-dashes",       ok: result.qc.no_em_dash },
     { label: "No slang",           ok: result.qc.no_slang },
@@ -91,27 +112,56 @@ export function DraftPreview({
         }}
       >
         <div
-          className="px-4 py-3 flex items-center justify-between border-b"
+          className="px-4 py-3 flex items-center justify-between border-b gap-2"
           style={{ background: "var(--color-panel)", borderColor: "var(--color-line)" }}
         >
           <span
-            className="text-[11px] tracking-[0.14em] uppercase"
+            className="text-[11px] tracking-[0.14em] uppercase shrink-0"
             style={{ color: "var(--color-gold)" }}
           >
             Generated · Business English
           </span>
-          <button
-            type="button"
-            onClick={copyToClipboard}
-            className="text-[11px] px-3 py-1.5 rounded border cursor-pointer"
-            style={{
-              background: "transparent",
-              color: copied ? "var(--color-success)" : "var(--color-muted)",
-              borderColor: copied ? "var(--color-success)" : "var(--color-line)",
-            }}
-          >
-            {copied ? "Copied ✓" : "Copy"}
-          </button>
+          <div className="flex gap-2 items-center">
+            {/* Outlook deep-link button */}
+            <button
+              type="button"
+              onClick={openInOutlook}
+              title="Open in your default email client (Outlook)"
+              className="text-[11px] px-3 py-1.5 rounded border cursor-pointer transition-colors"
+              style={{
+                background:
+                  outlookStatus === "opened" ? "rgba(197,165,114,0.15)"
+                  : outlookStatus === "copied" ? "rgba(100,180,100,0.12)"
+                  : "transparent",
+                color:
+                  outlookStatus === "opened" ? "var(--color-gold)"
+                  : outlookStatus === "copied" ? "var(--color-success)"
+                  : "var(--color-muted)",
+                borderColor:
+                  outlookStatus === "opened" ? "var(--color-gold)"
+                  : outlookStatus === "copied" ? "var(--color-success)"
+                  : "var(--color-line)",
+              }}
+            >
+              {outlookStatus === "opened" ? "✓ Opening…"
+               : outlookStatus === "copied" ? "✓ Copied — paste in Outlook"
+               : "Open in Outlook ↗"}
+            </button>
+
+            {/* Copy all button */}
+            <button
+              type="button"
+              onClick={copyToClipboard}
+              className="text-[11px] px-3 py-1.5 rounded border cursor-pointer"
+              style={{
+                background: "transparent",
+                color: copied ? "var(--color-success)" : "var(--color-muted)",
+                borderColor: copied ? "var(--color-success)" : "var(--color-line)",
+              }}
+            >
+              {copied ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
         </div>
 
         <div
