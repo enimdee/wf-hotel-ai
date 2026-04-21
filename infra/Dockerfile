@@ -29,6 +29,9 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
 COPY --from=build --chown=nextjs:nodejs /app/lib/brand-voice/prompt.md ./lib/brand-voice/prompt.md
 
+# Persistent data directory (settings.json, brand-voice-versions.json)
+RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]

@@ -22,6 +22,8 @@ services:
       - ../.env
     expose:
       - "3000"
+    volumes:
+      - app_data:/app/data
     depends_on:
       - mysql
 
@@ -43,3 +45,4 @@ volumes:
   caddy_data:
   caddy_config:
   mysql_data:
+  app_data:

@@ -1,0 +1,65 @@
+# Production compose — VPS srv1467971 (ai.wokeflow.net)
+# Traefik (already running via n8n) handles TLS + routing.
+# Run: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  web:
+    image: ghcr.io/enimdee/chatrium-ai:latest
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - app_data:/app/data
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      # ── AI provider (override per deployment) ──────────────────────────────
+      AI_PROVIDER: ${AI_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GOOGLE_MODEL: ${GOOGLE_MODEL:-gemini-2.0-flash}
+      # ── Data directory ─────────────────────────────────────────────────────
+      DATA_DIR: /app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatrium-ai.rule=Host(`ai.wokeflow.net`)"
+      - "traefik.http.routers.chatrium-ai.entrypoints=websecure"
+      - "traefik.http.routers.chatrium-ai.tls.certresolver=letsencrypt"
+      - "traefik.http.services.chatrium-ai.loadbalancer.server.port=3000"
+      - "traefik.docker.network=n8n_default"
+    networks:
+      - n8n_default
+      - internal
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_DATABASE: chatrium_ai
+      MYSQL_USER: ${MYSQL_USER:-chatrium_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
+      TZ: Asia/Bangkok
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-changeme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  n8n_default:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  app_data:
