@@ -4,6 +4,7 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { env } from "@/lib/env";
 
 const DATA_DIR = process.env.DATA_DIR ?? path.join(process.cwd(), "data");
 const FILE = path.join(DATA_DIR, "settings.json");
@@ -13,6 +14,10 @@ export interface AppSettings {
   anthropic_model: string;
   openai_model: string;
   google_model: string;
+  // API keys stored in settings file (optional — env vars used as fallback)
+  anthropic_api_key?: string;
+  openai_api_key?: string;
+  google_api_key?: string;
   updated_at: string;
 }
 
@@ -43,4 +48,23 @@ export async function writeSettings(patch: Partial<Omit<AppSettings, "updated_at
   const updated: AppSettings = { ...current, ...patch, updated_at: new Date().toISOString() };
   await fs.writeFile(FILE, JSON.stringify(updated, null, 2), "utf8");
   return updated;
+}
+
+/**
+ * Get the resolved API key for a provider.
+ * Priority: settings.json → env var
+ */
+export async function getResolvedKey(provider: "anthropic" | "openai" | "google"): Promise<string> {
+  const settings = await readSettings();
+  const e = env();
+
+  if (provider === "anthropic") return settings.anthropic_api_key || e.ANTHROPIC_API_KEY || "";
+  if (provider === "openai")    return settings.openai_api_key    || e.OPENAI_API_KEY    || "";
+  /* google */                  return settings.google_api_key    || e.GOOGLE_API_KEY    || "";
+}
+
+/** Returns last-4 masked key for display: "sk-ant-...ab12" */
+export function maskKey(key: string | undefined): string | null {
+  if (!key || key.length < 8) return null;
+  return `${key.slice(0, 7)}...${key.slice(-4)}`;
 }
