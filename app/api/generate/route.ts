@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { ulid } from "ulid";
 import { generateRequestSchema, type GenerateResponse, type ErrorResponse } from "@/lib/schemas";
 import { loadActivePrompt } from "@/lib/brand-voice";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   let parsedDraft: ReturnType<typeof parseDraft> | null = null;
   let qc = { no_em_dash: true, no_slang: true, cta_present: true, loyalty_recognised: true, length_ok: true };
   let effectiveUserContent = userContent;
-  let accumulatedUsage = {
+  const accumulatedUsage = {
     input_tokens: 0,
     cache_creation_input_tokens: 0,
     cache_read_input_tokens: 0,
