@@ -1,67 +1,100 @@
 # TASKS — Wokeflow AI Communication Assistant
 **อัพเดทล่าสุด:** 21 เมษายน 2569  
-**Pilot:** Chatrium Rawai Phuket | **URL:** https://ai.wokeflow.net
+**สถานะ:** 🟢 Commercial SaaS — ขายทั่วไป  
+**Product URL:** https://wokeflow.net/products/ai-comm  
+**Customer #1:** Chatrium Rawai Phuket (ai.wokeflow.net)
 
 ---
 
-## ✅ Done — Tier A (Feature Complete)
+## ✅ Done — Product Core (Feature Complete)
 
-- [x] **A1** Draft History — sidebar บันทึก 30 drafts ล่าสุด, click reload ได้
-- [x] **A2** Outlook Deep-link — "Open in Outlook ↗" 1 คลิก
-- [x] **A3** Template Library — 8 templates, modal filter ตาม task type
-- [x] **A4** Regenerate Variants — Shorter/Warmer/More formal/Custom + switcher v1 v2 v3
-- [x] **A5** Multi-language Output — EN / 中文 / 日本語 / 한국어 / ไทย
-- [x] Sprint 1a — Cost tracking + monthly ceiling (฿50/user/month)
-- [x] Sprint 1b — Magic-link auth + route protection middleware
-- [x] Sprint 1c — "Powered by Wokeflow" branding in sidebar
-- [x] Deploy scripts — `new-customer.sh`, `update-customer.sh`, `list-customers.sh`
-- [x] Product Bible — `PRODUCT_BIBLE.md` + `PRODUCT_BIBLE.docx`
+- [x] AI Email Draft — generate จาก objective ภาษาไทย/อังกฤษ
+- [x] Brand Voice Enforcement — ฝัง brand rules ใน AI ถาวร
+- [x] Magic-link Auth — login ไม่ต้อง password
+- [x] Draft History (A1) — sidebar บันทึก 30 drafts ล่าสุด
+- [x] Outlook Deep-link (A2) — "Open in Outlook ↗" 1 คลิก
+- [x] Template Library (A3) — 8 templates, modal filter
+- [x] Regenerate / Refine (A4) — Shorter/Warmer/Custom + switcher
+- [x] Multi-language Output (A5) — EN / 中文 / 日本語 / 한국어 / ไทย
+- [x] Cost Ceiling + Usage Dashboard
+- [x] Admin Panel (brand voice, users, settings)
+- [x] Multi-customer deploy — `new-customer.sh` 10 นาที/customer
+- [x] Product Bible v1.0 (MD + DOCX)
 
 ---
 
-## 🔵 Active — Tier B (ถัดไป)
+## 🔴 Active — Go-to-Market (ทำก่อน)
 
-- [ ] **B1** Brand Voice Score — คะแนน 0–100 ต่อ draft (MARCOM KPI)
-- [ ] **B4** Analytics Dashboard — ขยาย /admin/usage ให้ GM มี data ตัดสินใจ
+### Product Branding & Sales
+- [ ] **GTM-1** Rename repo จาก `chatrium-ai` → `wokeflow-hotel-ai` (generic SaaS name)
+- [ ] **GTM-2** Landing page `wokeflow.net/hotel-ai` — value prop, pricing, demo request
+- [ ] **GTM-3** Demo instance ที่ใช้ show ลูกค้า (ไม่ใช่ Chatrium data)
+- [ ] **GTM-4** Sales deck (PowerPoint/Google Slides) — 10 slides
+- [ ] **GTM-5** One-pager PDF สำหรับแจก hotel decision makers
+
+### Operations & Billing
+- [ ] **OPS-1** Wokeflow Master Admin — dashboard เห็นทุก customer, usage, status
+- [ ] **OPS-2** Subscription gate — auto-suspend เมื่อ payment fail
+- [ ] **OPS-3** Payment gateway — Stripe หรือ Omise (บาท)
+- [ ] **OPS-4** Terms of Service + Privacy Policy (PDPA compliant)
+- [ ] **OPS-5** Onboarding email sequence — welcome → brand voice setup → first draft
+
+### Customer Acquisition
+- [ ] **BIZ-1** Customer #2 — identify + pitch (โรงแรม 4–5 ดาว กทม หรือ รีสอร์ท)
+- [ ] **BIZ-2** Case study Chatrium Rawai — "ประหยัด X ชม/เดือน" (รอ pilot data)
+- [ ] **BIZ-3** Pricing page live บน wokeflow.net
+
+---
+
+## 🔵 Next — Product Tier B
+
+- [ ] **B1** Brand Voice Score — คะแนน 0–100 ต่อ draft
+- [ ] **B4** Analytics for Managers — draft/user/week, time saved estimate
 - [ ] **B2** Recipient Memory — จำ context ลูกค้า repeat guest
 - [ ] **B3** Team Review Workflow — FO draft → GM approve
 - [ ] **B5** Mobile-responsive layout
 
 ---
 
-## 🟡 Pending — Business / Operational
+## 🟡 Pending — Decisions รอ
 
-- [ ] **D-1** Pricing final — รอ pilot feedback เดือน 1
-- [ ] **D-2** Anthropic billing corporate card — Sakchai
-- [ ] **D-3** Brand voice MARCOM sign-off — Richard Mehr
-- [ ] **D-4** Pilot user list 30 คน — Richard Mehr
-- [ ] **D-5** Subdomain final (ai.chatrium.com vs ai.wokeflow.net) — Sakchai + IT
-- [ ] Staff training session — Chatrium Rawai (วันที่ยังไม่กำหนด)
-- [ ] Wokeflow Master Admin panel — dashboard เห็นทุก customer instance
+- [ ] **D-1** Pricing final — Starter ฿1,990 / Pro ฿3,990 / Enterprise Custom (ยืนยัน)
+- [ ] **D-2** Anthropic billing corporate card
+- [ ] **D-3** Brand voice sign-off จาก Chatrium MARCOM (Customer #1)
+- [ ] **D-4** Pilot user list 30 คน (Chatrium Rawai)
+- [ ] **D-5** Custom domain per customer? (ai.chatrium.com) หรือ subdomain.wokeflow.net เท่านั้น
 
 ---
 
-## 🔮 Someday — Tier C / D
+## 🔮 Someday — Tier C/D
 
-- [ ] **C1** PMS Integration (Opera/Protel) — auto-pull guest data
-- [ ] **C2** M365 SSO + Outlook Native Add-in (Phase 4 roadmap)
-- [ ] **C3** Wokeflow Master Admin — subscription gate, central billing
-- [ ] **C4** White-label per property (โลโก้/สีของโรงแรมเอง)
-- [ ] Guest Review Response AI (Booking.com, Agoda, Google)
-- [ ] Marketing Copy AI (Newsletter, Social)
+- [ ] PMS Integration (Opera/Protel)
+- [ ] M365 SSO + Outlook Native Add-in
+- [ ] White-label (โลโก้/สีของโรงแรมเอง)
+- [ ] Guest Review Response AI (Booking.com, Agoda)
+- [ ] Marketing Copy AI
 - [ ] Cross-property HQ Dashboard
+- [ ] ขยายตลาด ASEAN (SG, MY, VN, ID)
 
 ---
 
-## 📋 Info
+## 📋 Technical Info
 
 | รายการ | รายละเอียด |
 |---|---|
-| VPS | srv1467971 (KVM2 — 2vCPU/8GB/100GB) |
-| Capacity | ~5–6 customers (ปัจจุบัน 1) |
+| Repo | github.com/enimdee/chatrium-ai (rename pending GTM-1) |
 | Image | ghcr.io/enimdee/chatrium-ai:latest |
-| Repo | github.com/enimdee/chatrium-ai |
+| VPS | srv1467971 · KVM2 · 2vCPU/8GB/100GB |
+| Capacity | ~5–6 customers/VPS · Scale: KVM4 = 12–14 |
+| Deploy | `./scripts/new-customer.sh` → 10 นาที/customer |
 | CI/CD | GitHub Actions → push main → deploy อัตโนมัติ |
-| AI Model | Claude Sonnet 4.6 + prompt caching |
-| Auth | Magic-link (custom JWT) |
-| Contacts | Sakchai (Product), Richard Mehr (Pilot), Anuwat (Infra) |
+| AI | Claude Sonnet 4.6 + prompt caching (~86% cost saving) |
+| Auth | Magic-link (custom JWT, no third-party) |
+
+## 👥 People
+
+| บทบาท | คน |
+|---|---|
+| Product Owner / Engineering | Sakchai Nimdee (Wokeflow) |
+| Customer #1 Contact | Richard A. Mehr (Chatrium Rawai) |
+| VPS / Infra | Anuwat |

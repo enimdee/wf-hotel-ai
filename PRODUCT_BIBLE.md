@@ -2,10 +2,16 @@
 # Wokeflow AI Communication Assistant
 ### สำหรับอุตสาหกรรมการบริการ (Hospitality)
 
-**เวอร์ชัน:** 1.0  
+**เวอร์ชัน:** 1.1  
 **วันที่:** 21 เมษายน 2569  
 **เจ้าของ Product:** Sakchai Nimdee — Wokeflow  
-**สถานะ:** Pilot Production (Chatrium Rawai Phuket)
+**สถานะ:** 🟢 Commercial SaaS — General Availability  
+**Customer #1:** Chatrium Rawai Phuket (Reference Customer)
+
+---
+
+> ⚠️ **Strategic Note (v1.1):** Product นี้ไม่ได้สร้างเพื่อ Chatrium โรงแรมเดียว — Chatrium Rawai เป็น Customer #1 และ Reference Customer เท่านั้น  
+> **Wokeflow AI Communication Assistant** เป็น SaaS product ของ Wokeflow สำหรับขายให้โรงแรม 4–5 ดาวทั่วไป
 
 ---
 
@@ -80,12 +86,15 @@ AI generate draft (English + brand voice)
 | Hotel chains (Chatrium, Centara, Dusit) | ~50 groups | Enterprise |
 | โรงแรมในอาเซียน (เฟส 2+) | ~5,000 แห่ง | ขยาย |
 
-### Beachhead: Chatrium Hotels & Residences
+### Go-to-Market Strategy
 
-- 9 properties ในไทย (~2,500 rooms)
-- Pilot: Chatrium Rawai Phuket (~30 users)
-- Rollout target: Grand Chatrium Bangkok, Maitria Sukhumvit (~200 users)
-- ถ้า Chatrium สำเร็จ → ใช้เป็น case study ขาย properties อื่น
+**Customer #1 (Reference):** Chatrium Rawai Phuket  
+→ ใช้เป็น case study + testimonial → ขายโรงแรม 4–5 ดาวอื่นทั่วไทยและ ASEAN
+
+**Target acquisition pipeline:**
+- Customer #2–5: โรงแรม 4–5 ดาวในกรุงเทพ / ภูเก็ต / เชียงใหม่
+- Customer #6–20: ขยาย chain hotels (Centara, Dusit, ONYX)
+- Customer #21+: ASEAN (SG, MY, VN, ID)
 
 ### User Personas
 
@@ -316,6 +325,7 @@ Customer C: ai.maitria.wokeflow.net
 
 | วันที่ | เวอร์ชัน | รายการ |
 |---|---|---|
+| 21 เม.ย. 2569 | 1.1 | Strategic pivot — เปลี่ยนจาก Chatrium internal tool → Wokeflow commercial SaaS |
 | 21 เม.ย. 2569 | 1.0 | Initial Product Bible — post Tier A feature complete |
 | — | 0.9 | Sprint 1 (Auth + Cost tracking + Wokeflow branding) |
 | — | 0.1 | Phase 1 scaffold (compose + generate API) |
